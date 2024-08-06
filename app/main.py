@@ -8,4 +8,4 @@ app.include_router(balances.router, prefix="/balances", tags=["balances"])
 
 @app.get("/")
 async def root():
-    return {"message": "Hello Bigger Applications!"}
+    return {"message": "Hello"}

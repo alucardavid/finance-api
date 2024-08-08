@@ -58,5 +58,26 @@ def update_balance(db: Session, balance_id: int, new_balance: balance_schema.Bal
     else:
         return None
 
+def increase_balance(db: Session, balance_id: int, new_value: balance_schema.BalanceIncrease):
+    """Increase the balance value"""
+    db_balance = db.query(balance_model.Balance).get(balance_id)
+    if db_balance is not None:
+        db_balance.value += new_value.value
+        db_balance.updated_at = datetime.now()
+        db.commit()
+        db.refresh(db_balance)
+
+    return db_balance
+    
+def decrease_balance(db: Session, balance_id: int, new_value: balance_schema.BalanceDecrease):
+    """Decrease the balance value"""
+    db_balance = db.query(balance_model.Balance).get(balance_id)
+    if db_balance is not None:
+        db_balance.value -= new_value.value
+        db_balance.updated_at = datetime.now()
+        db.commit()
+        db.refresh(db_balance)
+
+    return db_balance
     
 

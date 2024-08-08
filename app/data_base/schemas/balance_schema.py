@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
+from decimal import Decimal
 
 class Balance(BaseModel):
     id: int
@@ -20,4 +21,8 @@ class BalanceUpdate(BaseModel):
     value: float = Field(default= None)
     show: str = Field(default= None, min_length=1, max_length=1)
 
-    
+class BalanceIncrease(BaseModel):
+    value: Decimal = Field(gt=0, nullable=False)   
+
+class BalanceDecrease(BaseModel):
+    value: Decimal = Field(gt=0, nullable=False)

@@ -48,3 +48,17 @@ def delete_monthly_expense(expense_id: int, response: Response, db: Session = De
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         return { "error_message": e}
+    
+@router.put("/{expense_id}")
+def update_monthly_expense(expense_id: int, response: Response, new_expense: monthly_expense_schema.MonthlyExpenseUpdate, db: Session = Depends(get_db)):
+    """Update a expense"""
+    try:
+        expense = monthly_expense_crud.update_expense(db, expense_id, new_expense)
+        if expense is not None:
+            return expense
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
+    
+    except Exception as e:
+        response.status_code = status.HTTP_406_NOT_ACCEPTABLE
+        return { "error_message": e}

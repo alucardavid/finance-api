@@ -29,3 +29,13 @@ class MonthlyExpenseCreate(BaseModel):
     expense_category_id: int
     form_of_payment_id: int
     
+class MonthlyExpenseUpdate(BaseModel):
+    place: str = Field(default=None, min_length=2)
+    description: str = Field(default=None, min_length=2)
+    date: datetime = Field(default=None)
+    amount: Decimal = Field(gt=0, default=None)
+    total_plots: int = Field(default=None)
+    current_plot: int = Field(default=None)
+    due_date: datetime = Field(default=None)
+    expense_category_id: int = Field(default=None)
+    form_of_payment_id: int = Field(default=None)

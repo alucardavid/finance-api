@@ -1,6 +1,5 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Numeric, BigInteger, Sequence
-from sqlalchemy.orm import relationship
-
+from sqlalchemy.orm import relationship, Mapped
 from ..database import Base
 
 class Balance(Base):
@@ -13,3 +12,4 @@ class Balance(Base):
     updated_at = Column(DateTime, nullable=True)
     user_id = Column(Integer)
     show = Column(String)
+    form_of_payments = relationship("FormOfPayment", back_populates="balances")

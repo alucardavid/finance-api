@@ -4,6 +4,7 @@ from ..data_base.models import monthly_expense_model
 from ..data_base.schemas import monthly_expense_schema
 from ..data_base.crud import monthly_expense_crud
 from ..data_base.database import engine, get_db
+from typing import List, Optional
 
 monthly_expense_model.Base.metadata.create_all(bind=engine)
 
@@ -59,6 +60,32 @@ def update_monthly_expense(expense_id: int, response: Response, new_expense: mon
         else:
             response.status_code = status.HTTP_404_NOT_FOUND
     
+    except Exception as e:
+        response.status_code = status.HTTP_406_NOT_ACCEPTABLE
+        return { "error_message": e}
+
+@router.put("/pay/{expense_id}")
+def pay_monthly_expense(expense_id: int, response: Response, db: Session = Depends(get_db)):
+    """Pay a monthly expense change de staus to Pago"""
+    try:
+        expense = monthly_expense_crud.pay_expense(db, expense_id)
+        if expense is not None:
+            return expense
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
+    except Exception as e:
+        response.status_code = status.HTTP_406_NOT_ACCEPTABLE
+        return { "error_message": e}
+    
+@router.put("/pay/")
+def pay_monthly_expenses(expenses_id: List[int], response: Response, db: Session = Depends(get_db)):
+    """Pay all expenses in the list"""
+    try:
+        expenses_paid = monthly_expense_crud.pay_expenses(db, expenses_id)
+        if expenses_paid is not None:
+            return expenses_paid  
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         return { "error_message": e}

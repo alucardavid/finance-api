@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
+from typing import List
 from datetime import datetime
 from ..schemas import monthly_expense_schema
 from ..models import monthly_expense_model
@@ -84,7 +85,28 @@ def update_expense(db: Session, expense_id: int, new_expense: monthly_expense_sc
 
     return db_expense
    
+def pay_expense(db: Session, expense_id: int):
+    """Change expense status to Pago"""
+    db_expense = db.query(monthly_expense_model.MonthlyExpense).get(expense_id)
 
+    if db_expense is not None:
+        db_expense.status = "Pago"
+        db.commit()
+        db.refresh(db_expense)
+        
+    return db_expense
+
+def pay_expenses(db: Session, expenses_id: monthly_expense_schema.MonthlyExpensesPay):
+    """Pay all expenses in the list"""
+    if expenses_id is not None:
+        db.query(monthly_expense_model.MonthlyExpense).filter(monthly_expense_model.MonthlyExpense.id.in_(expenses_id)).update({"status": "Pago"})
+        db.commit()
+        
+        db_expenses_paid = db.query(monthly_expense_model.MonthlyExpense).filter(monthly_expense_model.MonthlyExpense.id.in_(expenses_id)).all()
+        
+    return db_expenses_paid
+
+    
 
 
         

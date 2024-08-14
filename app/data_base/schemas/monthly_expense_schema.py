@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
 from decimal import Decimal
+from typing import List
 
 class MonthlyExpense(BaseModel):
     id: int
@@ -39,3 +40,6 @@ class MonthlyExpenseUpdate(BaseModel):
     due_date: datetime = Field(default=None)
     expense_category_id: int = Field(default=None)
     form_of_payment_id: int = Field(default=None)
+
+class MonthlyExpensesPay(BaseModel):
+    expenses_id: List[int]

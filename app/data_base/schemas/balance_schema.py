@@ -10,7 +10,8 @@ class Balance(BaseModel):
     updated_at: datetime 
     user_id: int | None = 1
     show: str | None
-
+    class Config:
+        from_attributes = True
 class BalanceCreate(BaseModel):
     description: str
     value: float

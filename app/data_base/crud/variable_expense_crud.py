@@ -37,3 +37,14 @@ def add_expense(db: Session, new_expense: schema.VariableExpenseCreate):
     db.refresh(db_expense)
     
     return(db_expense)
+
+def delete_expense(db: Session, expense_id: int):
+    """Delete a expense"""
+    db_expense = db.query(model.VariableExpense).get(expense_id)
+
+    if db_expense is not None:
+        db.delete(db_expense)
+        db.commit()
+        return expense_id
+    else:
+        return None

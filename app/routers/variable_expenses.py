@@ -20,6 +20,16 @@ def read_variable_expenses(response: Response, skip: int = 0, limit: int = 0, or
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         return { "error_message": e}
 
+@router.get("/{expense_id}")
+def read_variable_expense(expense_id: int, response: Response, db: Session = Depends(get_db)):
+    """Get variable expense by id"""
+    expense = crud.get_expense(db, expense_id)
+    if expense is not None:
+        return expense
+    else:
+        response.status_code = status.HTTP_404_NOT_FOUND
+
+
 @router.post("/")
 def add_variable_expense(response: Response, new_expense: schema.VariableExpenseCreate, db: Session = Depends(get_db)):
     """Create a new expense"""

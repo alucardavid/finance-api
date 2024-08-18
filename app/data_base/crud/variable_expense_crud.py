@@ -10,6 +10,10 @@ def get_all_expenses(db: Session, skip: int = 0, limit: int = 100, order_by: str
     """Get all variable expenses"""
     return db.query(model.VariableExpense).options(joinedload(model.VariableExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).order_by(text(order_by)).offset(skip).limit(limit).all()
 
+def get_expense(db: Session, expense_id: int):
+    """Get expense by id"""
+    return db.query(model.VariableExpense).options(joinedload(model.VariableExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).get(expense_id)
+
 def add_expense(db: Session, new_expense: schema.VariableExpenseCreate):
     """Create a new expense"""
     db_expense = model.VariableExpense(

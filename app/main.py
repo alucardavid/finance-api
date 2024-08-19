@@ -11,4 +11,4 @@ app.include_router(form_of_payments.router, prefix="/form-of-payments", tags="fo
 
 @app.get("/")
 async def root():
-    return {"message": "Hello"}
+    return {"message": "Hello World Mother Fucker"}

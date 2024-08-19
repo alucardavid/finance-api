@@ -19,5 +19,6 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker build . --file Dockerfile --tag dpereira99/finance-api:$(date +%s)
+          docker build . --file Dockerfile --tag dpereira99/finance-api:latest
+          docker tag dpereira99/finance-api:latest dpereira99/finance-api:$(date +%s)
           docker push dpereira99/finance-api

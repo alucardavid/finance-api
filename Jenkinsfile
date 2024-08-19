@@ -3,7 +3,13 @@ pipeline {
     stages {
         stage('Stage 1') {
             steps {
-                echo 'Hello world!' 
+                sh 'docker ps'
+            }
+        }
+
+        stage('Stage 2') {
+            steps {
+                echo 'Hello World!'
             }
         }
     }

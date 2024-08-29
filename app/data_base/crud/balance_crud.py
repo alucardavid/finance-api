@@ -2,10 +2,11 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from ..schemas import balance_schema
 from ..models import balance_model
+from sqlalchemy.sql import text
 
-def get_balances(db: Session, skip: int = 0, limit: int = 100):
+def get_balances(db: Session, skip: int = 0, limit: int = 100, order_by: str = "id asc"):
     """Get all balances"""
-    return db.query(balance_model.Balance).offset(skip).limit(limit).all()
+    return db.query(balance_model.Balance).order_by(text(order_by)).offset(skip).limit(limit).all()
 
 def get_balance_by_id(db: Session, balance_id: int):
     """Get a balance by Id"""

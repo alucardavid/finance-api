@@ -10,9 +10,9 @@ balance_model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/", status_code=201)
-def read_balances(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_balances(skip: int = 0, limit: int = 100, order_by: str = "id asc", db: Session = Depends(get_db)):
     """Retrieve balances"""
-    balances = balance_crud.get_balances(db, skip=skip, limit=limit)
+    balances = balance_crud.get_balances(db, skip, limit, order_by)
     return balances
 
 @router.get("/{balance_id}")

@@ -11,7 +11,7 @@ monthly_expense_model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/")
-def read_monthly_expenses(response: Response, skip: int = 0, limit: int = 100, order_by: str = "id asc", db: Session = Depends(get_db)):
+def read_monthly_expenses(response: Response, skip: int = 0, limit: int = 50, order_by: str = "variable_expenses.id asc", db: Session = Depends(get_db)):
     """Retrieve all monthly expenses"""
     try:
         monthly_expenses = monthly_expense_crud.get_all_expenses(db, skip, limit, order_by)

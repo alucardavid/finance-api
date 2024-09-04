@@ -11,7 +11,7 @@ variable_expense_model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/")
-def read_variable_expenses(response: Response, skip: int = 0, limit: int = 0, order_by: str = "id asc", db: Session = Depends(get_db)):
+def read_variable_expenses(response: Response, skip: int = 0, limit: int = 50, order_by: str = "variable_expenses.id asc", db: Session = Depends(get_db)):
     """Retrieve all variable expenses"""
     try:
         expenses = crud.get_all_expenses(db, skip, limit, order_by)

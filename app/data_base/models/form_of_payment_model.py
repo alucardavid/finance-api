@@ -13,6 +13,7 @@ class FormOfPayment(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     balance_id = Column(Integer, ForeignKey("balances.id"))
+    active = Column(String)
     balances = relationship("Balance", back_populates="form_of_payments")
     variable_expenses = relationship("VariableExpense", back_populates="form_of_payments")
     

@@ -6,8 +6,6 @@ from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 
-
-
 SQLALCHEMY_DATABASE_URI = os.getenv("DB_CONNECTION_STRING")
 
 engine = create_engine(

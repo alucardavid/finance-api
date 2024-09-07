@@ -1,0 +1,8 @@
+services:
+  app:
+    image: dpereira99/finance-api:latest
+    build: .
+    ports:
+      - 8001:80
+    environment:
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING}

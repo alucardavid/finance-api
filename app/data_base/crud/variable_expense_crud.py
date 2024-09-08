@@ -52,3 +52,19 @@ def delete_expense(db: Session, expense_id: int):
         return expense_id
     else:
         return None
+    
+def update_expense(db: Session, expense_id: int, new_expense: schema.VariableExpenseCreate):
+    """update a expense"""
+    db_expense = db.query(model.VariableExpense).get(expense_id)
+    if db_expense is not None:
+        db_expense.place = new_expense.place
+        db_expense.description = new_expense.description
+        db_expense.date = new_expense.date
+        db_expense.type = new_expense.type
+        db_expense.amount = new_expense.amount
+        db_expense.form_of_payment_id = new_expense.form_of_payment_id
+        db_expense.updated_at = datetime.now()
+        db.commit()
+        db.refresh(db_expense)
+
+    return db_expense

@@ -43,4 +43,9 @@ def delete_variable_expense(expense_id: int, response: Response, db: Session = D
     if expense is None:
         response.status_code = status.HTTP_404_NOT_FOUND
 
+@router.put("/{expense_id}")
+def update_variable_expense(expense_id, response: Response, new_expense: schema.VariableExpenseCreate, db: Session = Depends(get_db)):
+    """Update a expense"""
+    return crud.update_expense(db, expense_id, new_expense)
+
     

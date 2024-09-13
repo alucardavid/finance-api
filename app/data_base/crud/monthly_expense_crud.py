@@ -1,22 +1,23 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import text
 from typing import List
 from datetime import datetime
 from ..schemas import monthly_expense_schema
-from ..models import monthly_expense_model
+from ..models import monthly_expense_model as model
+from ..models import form_of_payment_model
 
 def get_all_expenses(db: Session, skip: int = 0, limit: int = 100, order_by: str = "id asc"):
     """Get all monthly expenses"""
-    return db.query(monthly_expense_model.MonthlyExpense).order_by(text(order_by)).offset(skip).limit(limit).all()
+    return db.query(model.MonthlyExpense).options(joinedload(model.MonthlyExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).order_by(text(order_by)).offset(skip).limit(limit).all()
 
 def get_expense_by_id(db: Session, expense_id):
     """Get a expense by id"""
-    return db.query(monthly_expense_model.MonthlyExpense).get(expense_id)
+    return db.query(model.MonthlyExpense).options(joinedload(model.MonthlyExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).get(expense_id)
 
 
 def create_expense(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
     """Create a new expense"""
-    db_expense = monthly_expense_model.MonthlyExpense(
+    db_expense = model.MonthlyExpense(
         place = new_expense.place,
         description = new_expense.description,
         date = new_expense.date,
@@ -39,7 +40,7 @@ def create_expense(db: Session, new_expense: monthly_expense_schema.MonthlyExpen
 
 def delete_expense(db: Session, expense_id: int):
     """Delete a expense"""
-    db_expense = db.query(monthly_expense_model.MonthlyExpense).get(expense_id)
+    db_expense = db.query(model.MonthlyExpense).get(expense_id)
     if db_expense is not None:
         db.delete(db_expense)
         db.commit()
@@ -49,7 +50,7 @@ def delete_expense(db: Session, expense_id: int):
         
 def update_expense(db: Session, expense_id: int, new_expense: monthly_expense_schema.MonthlyExpenseUpdate):
     """Update a expense"""
-    db_expense = db.query(monthly_expense_model.MonthlyExpense).get(expense_id)
+    db_expense = db.query(model.MonthlyExpense).get(expense_id)
 
     if db_expense is not None:
         if new_expense.place is not None:
@@ -87,7 +88,7 @@ def update_expense(db: Session, expense_id: int, new_expense: monthly_expense_sc
    
 def pay_expense(db: Session, expense_id: int):
     """Change expense status to Pago"""
-    db_expense = db.query(monthly_expense_model.MonthlyExpense).get(expense_id)
+    db_expense = db.query(model.MonthlyExpense).get(expense_id)
 
     if db_expense is not None:
         db_expense.status = "Pago"
@@ -99,10 +100,10 @@ def pay_expense(db: Session, expense_id: int):
 def pay_expenses(db: Session, expenses_id: monthly_expense_schema.MonthlyExpensesPay):
     """Pay all expenses in the list"""
     if expenses_id is not None:
-        db.query(monthly_expense_model.MonthlyExpense).filter(monthly_expense_model.MonthlyExpense.id.in_(expenses_id)).update({"status": "Pago"})
+        db.query(model.MonthlyExpense).filter(model.MonthlyExpense.id.in_(expenses_id)).update({"status": "Pago"})
         db.commit()
         
-        db_expenses_paid = db.query(monthly_expense_model.MonthlyExpense).filter(monthly_expense_model.MonthlyExpense.id.in_(expenses_id)).all()
+        db_expenses_paid = db.query(model.MonthlyExpense).filter(model.MonthlyExpense.id.in_(expenses_id)).all()
         
     return db_expenses_paid
 

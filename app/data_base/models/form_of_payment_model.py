@@ -16,4 +16,5 @@ class FormOfPayment(Base):
     active = Column(String)
     balances = relationship("Balance", back_populates="form_of_payments")
     variable_expenses = relationship("VariableExpense", back_populates="form_of_payments")
+    monthly_expenses = relationship("MonthlyExpense", back_populates="form_of_payments")
     

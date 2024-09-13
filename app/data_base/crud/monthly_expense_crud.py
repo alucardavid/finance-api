@@ -5,10 +5,28 @@ from datetime import datetime
 from ..schemas import monthly_expense_schema
 from ..models import monthly_expense_model as model
 from ..models import form_of_payment_model
+import sys
 
-def get_all_expenses(db: Session, skip: int = 0, limit: int = 100, order_by: str = "id asc"):
+def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc"):
     """Get all monthly expenses"""
-    return db.query(model.MonthlyExpense).options(joinedload(model.MonthlyExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).order_by(text(order_by)).offset(skip).limit(limit).all()
+    items = (db.query(model.MonthlyExpense)
+               .options(joinedload(model.MonthlyExpense.form_of_payments)
+               .joinedload(form_of_payment_model.FormOfPayment.balances))
+               .order_by(text(order_by))
+               .offset((page * limit) - limit)
+               .limit(limit).all())
+    
+    count = db.query(model.MonthlyExpense).count()
+    
+    result = {
+        'count': count,
+        'total_pages': int(count/ limit),
+        'limit': limit,
+        'page': page,
+        'items': items
+    }
+
+    return result
 
 def get_expense_by_id(db: Session, expense_id):
     """Get a expense by id"""

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.sql import text
+from sqlalchemy.sql import text, func
 from typing import List
 from datetime import datetime
 from ..schemas import monthly_expense_schema
@@ -7,20 +7,35 @@ from ..models import monthly_expense_model as model
 from ..models import form_of_payment_model
 import sys
 
-def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc"):
+def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None):
     """Get all monthly expenses"""
-    items = (db.query(model.MonthlyExpense)
+        
+    if due_date is None:
+        items = (db.query(model.MonthlyExpense)
                .options(joinedload(model.MonthlyExpense.form_of_payments)
                .joinedload(form_of_payment_model.FormOfPayment.balances))
                .order_by(text(order_by))
                .offset((page * limit) - limit)
                .limit(limit).all())
-    
-    count = db.query(model.MonthlyExpense).count()
+
+        count = db.query(model.MonthlyExpense).count()
+
+    else:
+        items = (db.query(model.MonthlyExpense)
+               .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
+               .options(joinedload(model.MonthlyExpense.form_of_payments)
+               .joinedload(form_of_payment_model.FormOfPayment.balances))
+               .order_by(text(order_by))
+               .offset((page * limit) - limit)
+               .limit(limit).all())
+        
+        count = (db.query(model.MonthlyExpense)
+               .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
+               .count())
     
     result = {
         'count': count,
-        'total_pages': int(count/ limit),
+        'total_pages': int((count/ limit)+1),
         'limit': limit,
         'page': page,
         'items': items
@@ -31,7 +46,6 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
 def get_expense_by_id(db: Session, expense_id):
     """Get a expense by id"""
     return db.query(model.MonthlyExpense).options(joinedload(model.MonthlyExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).get(expense_id)
-
 
 def create_expense(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
     """Create a new expense"""

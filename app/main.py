@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI
 from .routers import balances, monthly_expenses, variable_expenses, form_of_payments
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 app = FastAPI()
 
@@ -29,3 +30,6 @@ app.include_router(form_of_payments.router, prefix="/form-of-payments", tags=["f
 async def root():
     return {"message": "Hello World Mother Fucker"}
 
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=7000)

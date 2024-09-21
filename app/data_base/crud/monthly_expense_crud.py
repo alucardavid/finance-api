@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.sql import text, func
+from sqlalchemy.sql import text, func, or_, and_
 from typing import List
 from datetime import datetime
 from ..schemas import monthly_expense_schema
@@ -7,31 +7,119 @@ from ..models import monthly_expense_model as model
 from ..models import form_of_payment_model
 import sys
 
-def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None):
+def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
     """Get all monthly expenses"""
         
     if due_date is None:
-        items = (db.query(model.MonthlyExpense)
-               .options(joinedload(model.MonthlyExpense.form_of_payments)
-               .joinedload(form_of_payment_model.FormOfPayment.balances))
-               .order_by(text(order_by))
-               .offset((page * limit) - limit)
-               .limit(limit).all())
-
-        count = db.query(model.MonthlyExpense).count()
-
+        if where is None:
+            items = (db.query(model.MonthlyExpense)
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments)
+                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).all())
+            
+            count = db.query(model.MonthlyExpense).count()
+        else:
+            # Items
+            items = (db.query(model.MonthlyExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments)
+                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .where(or_(
+                    model.MonthlyExpense.place.like(f"%{where}%"),
+                    model.MonthlyExpense.description.like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
+                    func.replace(func.replace(func.replace(func.to_char(model.MonthlyExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.total_plots, "999").like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.current_plot, "999").like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.due_date, "dd/MM/yyyy").like(f"%{where}%"),
+                    model.MonthlyExpense.status.like(f"%{where}%"),
+                    form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
+                )) 
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).all())
+            
+            # Count
+            count = (db.query(model.MonthlyExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments)
+                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .where(or_(
+                    model.MonthlyExpense.place.like(f"%{where}%"),
+                    model.MonthlyExpense.description.like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
+                    func.replace(func.replace(func.replace(func.to_char(model.MonthlyExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.total_plots, "999").like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.current_plot, "999").like(f"%{where}%"),
+                    func.to_char(model.MonthlyExpense.due_date, "dd/MM/yyyy").like(f"%{where}%"),
+                    model.MonthlyExpense.status.like(f"%{where}%"),
+                    form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
+                )) 
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).count())
     else:
-        items = (db.query(model.MonthlyExpense)
-               .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
-               .options(joinedload(model.MonthlyExpense.form_of_payments)
-               .joinedload(form_of_payment_model.FormOfPayment.balances))
-               .order_by(text(order_by))
-               .offset((page * limit) - limit)
-               .limit(limit).all())
-        
-        count = (db.query(model.MonthlyExpense)
-               .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
-               .count())
+        if where is None:
+            items = (db.query(model.MonthlyExpense)
+                .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
+                .options(joinedload(model.MonthlyExpense.form_of_payments)
+                .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).all())
+            
+            count = (db.query(model.MonthlyExpense)
+                .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
+                .count())
+        else:
+            items = (db.query(model.MonthlyExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments)
+                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .where(and_(
+                    func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date, 
+                    (or_(
+                        model.MonthlyExpense.place.like(f"%{where}%"),
+                        model.MonthlyExpense.description.like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
+                        func.replace(func.replace(func.replace(func.to_char(model.MonthlyExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.total_plots, "999").like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.current_plot, "999").like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.due_date, "dd/MM/yyyy").like(f"%{where}%"),
+                        model.MonthlyExpense.status.like(f"%{where}%"),
+                        form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
+                    )
+                )))
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).all())
+            
+            count = (db.query(model.MonthlyExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments))
+                .where(and_(
+                    func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date, 
+                    (or_(
+                        model.MonthlyExpense.place.like(f"%{where}%"),
+                        model.MonthlyExpense.description.like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
+                        func.replace(func.replace(func.replace(func.to_char(model.MonthlyExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.total_plots, "999").like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.current_plot, "999").like(f"%{where}%"),
+                        func.to_char(model.MonthlyExpense.due_date, "dd/MM/yyyy").like(f"%{where}%"),
+                        model.MonthlyExpense.status.like(f"%{where}%"),
+                        form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
+                    )
+                )))
+                .count())
+    
     
     result = {
         'count': count,

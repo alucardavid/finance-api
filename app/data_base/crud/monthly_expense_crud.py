@@ -59,10 +59,7 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
                     func.to_char(model.MonthlyExpense.due_date, "dd/MM/yyyy").like(f"%{where}%"),
                     model.MonthlyExpense.status.like(f"%{where}%"),
                     form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
-                )) 
-                .order_by(text(order_by))
-                .offset((page * limit) - limit)
-                .limit(limit).count())
+                )).count())
     else:
         if where is None:
             items = (db.query(model.MonthlyExpense)

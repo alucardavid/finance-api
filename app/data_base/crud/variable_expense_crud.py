@@ -1,14 +1,62 @@
 from sqlalchemy.orm import Session, joinedload, defaultload
-from sqlalchemy.sql import text
+from sqlalchemy.sql import text, func, or_, and_
 from typing import List
 from datetime import datetime
 from ..schemas import variable_expense_schema as schema
 from ..models import variable_expense_model as model
 from ..models import form_of_payment_model 
 
-def get_all_expenses(db: Session, skip: int = 0, limit: int = 100, order_by: str = "id asc"):
+def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", where: str = None):
     """Get all variable expenses"""
-    return db.query(model.VariableExpense).options(joinedload(model.VariableExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).order_by(text(order_by)).offset(skip).limit(limit).all()
+
+    if where is None:
+        items = (db.query(model.VariableExpense)
+                .options(joinedload(model.VariableExpense.form_of_payments)
+                        .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).all())
+        
+        count = (db.query(model.VariableExpense).count())
+    else:
+        items = (db.query(model.VariableExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .options(joinedload(model.VariableExpense.form_of_payments)
+                        .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .where(or_(
+                    model.VariableExpense.place.like(f"%{where}%"),
+                    model.VariableExpense.description.like(f"%{where}%"),
+                    model.VariableExpense.type.like(f"%{where}%"),
+                    func.to_char(model.VariableExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
+                    func.replace(func.replace(func.replace(func.to_char(model.VariableExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
+                ))
+                .order_by(text(order_by))
+                .offset((page * limit) - limit)
+                .limit(limit).all())
+        
+        count = (db.query(model.VariableExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .options(joinedload(model.VariableExpense.form_of_payments)
+                        .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .where(or_(
+                    model.VariableExpense.place.like(f"%{where}%"),
+                    model.VariableExpense.description.like(f"%{where}%"),
+                    model.VariableExpense.type.like(f"%{where}%"),
+                    func.to_char(model.VariableExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
+                    func.replace(func.replace(func.replace(func.to_char(model.VariableExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
+                )).count())
+        
+    result = {
+        'count': count,
+        'total_pages': int((count/ limit)+1),
+        'limit': limit,
+        'page': page,
+        'items': items
+    }
+
+    return result
 
 def get_expense(db: Session, expense_id: int):
     """Get expense by id"""

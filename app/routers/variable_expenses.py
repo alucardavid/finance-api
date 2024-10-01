@@ -11,10 +11,10 @@ variable_expense_model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/")
-def read_variable_expenses(response: Response, skip: int = 0, limit: int = 50, order_by: str = "variable_expenses.id asc", db: Session = Depends(get_db)):
+def read_variable_expenses(response: Response, page: int = 1, limit: int = 50, order_by: str = "variable_expenses.id asc", where: str = None, db: Session = Depends(get_db)):
     """Retrieve all variable expenses"""
     try:
-        expenses = crud.get_all_expenses(db, skip, limit, order_by)
+        expenses = crud.get_all_expenses(db, page, limit, order_by, where)
         return expenses
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE

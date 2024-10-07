@@ -11,10 +11,18 @@ monthly_expense_model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/")
-def read_monthly_expenses(response: Response, page: int = 1, limit: int = 50, order_by: str = "variable_expenses.id desc", due_date: str = None, where: str = None, db: Session = Depends(get_db)):
+def read_monthly_expenses(response: Response, page: int = 1, limit: int = 50, 
+                          order_by: str = "monthly_expenses.id desc", due_date: str = None, 
+                          where: str = None, type_return: str = "standard", db: Session = Depends(get_db)):
     """Retrieve all monthly expenses"""
     try:
-        monthly_expenses = monthly_expense_crud.get_all_expenses(db, page, limit, order_by, due_date, where)
+        match type_return:
+            case "standard":
+                monthly_expenses = monthly_expense_crud.get_all_expenses(db, page, limit, order_by, due_date, where)
+            case "grouped_by_month":
+                print("entrou")
+                monthly_expenses = monthly_expense_crud.get_expenses_grouped_by_month(db, where)
+        
         return monthly_expenses
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
@@ -90,3 +98,4 @@ def pay_monthly_expenses(expenses_id: List[int], response: Response, db: Session
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         return { "error_message": e}
+    

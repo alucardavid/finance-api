@@ -1,5 +1,5 @@
 from fastapi import Depends, FastAPI
-from .routers import balances, monthly_expenses, variable_expenses, form_of_payments
+from .routers import balances, monthly_expenses, variable_expenses, form_of_payments, incomings
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -25,6 +25,7 @@ app.include_router(balances.router, prefix="/balances", tags=["balances"])
 app.include_router(monthly_expenses.router, prefix="/monthly-expenses", tags=["monthly-expenses"])
 app.include_router(variable_expenses.router, prefix="/variable-expenses", tags=["variable-expenses"])
 app.include_router(form_of_payments.router, prefix="/form-of-payments", tags=["form-of-payments"])
+app.include_router(incomings.router, prefix="/incomings", tags=["incomings"])
 
 @app.get("/")
 async def root():

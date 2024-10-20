@@ -10,10 +10,10 @@ model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/", status_code=201)
-def read_incomings(status: str = None, order_by: str = "id asc", db: Session = Depends(get_db)):
+def read_incomings(status: str = None, page: int = 1, limit: int = 50, order_by: str = "id asc", where: str = None, db: Session = Depends(get_db)):
     """Retrieve all incomings"""
 
-    incomings = crud.get_incomings(db, status, order_by)
+    incomings = crud.get_incomings(db, page, limit, status, order_by, where)
 
     return incomings
 

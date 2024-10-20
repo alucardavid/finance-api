@@ -2,21 +2,92 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from ..models import incoming_model as model
 from ..schemas import incoming_schema as schema
-from sqlalchemy.sql import text
+from sqlalchemy.sql import text, func, or_, and_
 
-def get_incomings(db: Session, status: str = None, order_by: str = "id asc"):
+def get_incomings(db: Session, page: int = 1, limit: int = 100, status: str = None, order_by: str = "id asc", where: str = None):
     """Get all incomings"""
     if not status:
-        incomings = (db.query(model.Incoming)
-                       .order_by(text(order_by))
-                       .all())  
+        if not where:
+            incomings = (db.query(model.Incoming)
+                           .order_by(text(order_by))
+                           .offset((page * limit) - limit)
+                           .limit(limit)
+                           .all())  
+            count = (db.query(model.Incoming).count())
+        else:
+            incomings = (db.query(model.Incoming)
+                           .where(or_(
+                               model.Incoming.description.like(f"%{where}%"),
+                               model.Incoming.source.like(f"%{where}%"),
+                               model.Incoming.status.like(f"%{where}%"),
+                               func.to_char(model.Incoming.date, "dd/MM/yyyy").like(f"%{where}%"),
+                               func.replace(func.replace(func.replace(func.to_char(model.Incoming.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    
+                           ))
+                           .order_by(text(order_by))
+                           .offset((page * limit) - limit)
+                           .limit(limit)
+                           .all()) 
+             
+            count = (db.query(model.Incoming)
+                       .where(or_(
+                        model.Incoming.description.like(f"%{where}%"),
+                        model.Incoming.source.like(f"%{where}%"),
+                        model.Incoming.status.like(f"%{where}%"),
+                        func.to_char(model.Incoming.date, "dd/MM/yyyy").like(f"%{where}%"),
+                        func.replace(func.replace(func.replace(func.to_char(model.Incoming.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    )).count())
     else:
-        incomings = (db.query(model.Incoming)
-                       .where(model.Incoming.status == status)
-                       .order_by(text(order_by))
-                       .all())  
+        if not where:
+            incomings = (db.query(model.Incoming)
+                        .where(model.Incoming.status == status)
+                        .order_by(text(order_by))
+                        .offset((page * limit) - limit)
+                        .limit(limit)
+                        .all())  
+            count = db.query(model.Incoming).where(model.Incoming.status == status).count()
 
-    return incomings
+        else:
+            incomings = (db.query(model.Incoming)
+                           .where(and_(
+                               model.Incoming.status == status,
+                               (or_(
+                               model.Incoming.description.like(f"%{where}%"),
+                               model.Incoming.source.like(f"%{where}%"),
+                               model.Incoming.status.like(f"%{where}%"),
+                               func.to_char(model.Incoming.date, "dd/MM/yyyy").like(f"%{where}%"),
+                               func.replace(func.replace(func.replace(func.to_char(model.Incoming.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    
+                               )
+                           )))
+                           .order_by(text(order_by))
+                           .offset((page * limit) - limit)
+                           .limit(limit)
+                           .all()) 
+             
+            count = (db.query(model.Incoming)
+                       .where(and_(
+                               model.Incoming.status == status,
+                               (or_(
+                               model.Incoming.description.like(f"%{where}%"),
+                               model.Incoming.source.like(f"%{where}%"),
+                               model.Incoming.status.like(f"%{where}%"),
+                               func.to_char(model.Incoming.date, "dd/MM/yyyy").like(f"%{where}%"),
+                               func.replace(func.replace(func.replace(func.to_char(model.Incoming.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
+                    
+                               )
+                           ))).count())
+
+
+    result = {
+        'count': count,
+        'total_pages': int((count/ limit)+1),
+        'limit': limit,
+        'page': page,
+        'items': incomings
+    }
+
+    return result
 
 def get_incoming_by_id(db: Session, incoming_id: int):
     """Get a incoming by id"""

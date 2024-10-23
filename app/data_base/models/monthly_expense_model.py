@@ -17,8 +17,9 @@ class MonthlyExpense(Base):
     status = Column(String)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    expense_category_id = Column(Integer)
+    expense_category_id = Column(Integer, ForeignKey("expense_categorys.id"))
     form_of_payment_id = Column(Integer, ForeignKey("form_of_payments.id"))
     user_id = Column(Integer)
     form_of_payments = relationship("FormOfPayment", back_populates="monthly_expenses")
+    expense_categorys = relationship("ExpenseCategory", back_populates="monthly_expenses")
 

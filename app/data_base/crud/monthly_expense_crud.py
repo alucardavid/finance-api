@@ -153,7 +153,12 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
 
 def get_expense_by_id(db: Session, expense_id):
     """Get a expense by id"""
-    return db.query(model.MonthlyExpense).options(joinedload(model.MonthlyExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).get(expense_id)
+    return (db.query(model.MonthlyExpense)
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments)
+                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
+                .where(model.MonthlyExpense.id == expense_id).one())
 
 def create_expense(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
     """Create a new expense"""

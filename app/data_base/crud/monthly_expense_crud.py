@@ -5,6 +5,8 @@ from datetime import datetime
 from ..schemas import monthly_expense_schema
 from ..models import monthly_expense_model as model
 from ..models import form_of_payment_model
+from ..models import expense_category_model
+from ..models import balance_model
 import sys
 
 def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
@@ -13,9 +15,13 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
     if due_date is None:
         if where is None:
             items = (db.query(model.MonthlyExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .join(balance_model.Balance)
+                .join(expense_category_model.ExpenseCategory)
                 .options(
                     joinedload(model.MonthlyExpense.form_of_payments)
                     .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .order_by(text(order_by))
                 .offset((page * limit) - limit)
                 .limit(limit).all())
@@ -25,9 +31,12 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
             # Items
             items = (db.query(model.MonthlyExpense)
                 .join(form_of_payment_model.FormOfPayment)
+                .join(balance_model.Balance)
+                .join(expense_category_model.ExpenseCategory)
                 .options(
                     joinedload(model.MonthlyExpense.form_of_payments)
                     .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .where(or_(
                     model.MonthlyExpense.place.like(f"%{where}%"),
                     model.MonthlyExpense.description.like(f"%{where}%"),
@@ -46,9 +55,12 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
             # Count
             count = (db.query(model.MonthlyExpense)
                 .join(form_of_payment_model.FormOfPayment)
+                .join(balance_model.Balance)
+                .join(expense_category_model.ExpenseCategory)
                 .options(
                     joinedload(model.MonthlyExpense.form_of_payments)
                     .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .where(or_(
                     model.MonthlyExpense.place.like(f"%{where}%"),
                     model.MonthlyExpense.description.like(f"%{where}%"),
@@ -63,9 +75,14 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
     else:
         if where is None:
             items = (db.query(model.MonthlyExpense)
+                .join(form_of_payment_model.FormOfPayment)
+                .join(balance_model.Balance)
+                .join(expense_category_model.ExpenseCategory)
                 .where(func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date)
-                .options(joinedload(model.MonthlyExpense.form_of_payments)
-                .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(
+                    joinedload(model.MonthlyExpense.form_of_payments)
+                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .order_by(text(order_by))
                 .offset((page * limit) - limit)
                 .limit(limit).all())
@@ -76,9 +93,12 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
         else:
             items = (db.query(model.MonthlyExpense)
                 .join(form_of_payment_model.FormOfPayment)
+                .join(balance_model.Balance)
+                .join(expense_category_model.ExpenseCategory)
                 .options(
                     joinedload(model.MonthlyExpense.form_of_payments)
                     .joinedload(form_of_payment_model.FormOfPayment.balances))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .where(and_(
                     func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date, 
                     (or_(
@@ -99,8 +119,11 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
             
             count = (db.query(model.MonthlyExpense)
                 .join(form_of_payment_model.FormOfPayment)
+                .join(balance_model.Balance)
+                .join(expense_category_model.ExpenseCategory)
                 .options(
                     joinedload(model.MonthlyExpense.form_of_payments))
+                .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .where(and_(
                     func.to_char(model.MonthlyExpense.due_date, "YYYY-MM") == due_date, 
                     (or_(

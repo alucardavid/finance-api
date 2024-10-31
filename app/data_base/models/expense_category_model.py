@@ -10,3 +10,4 @@ class ExpenseCategory(Base):
     show = Column(String)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+    monthly_expenses = relationship("MonthlyExpense", back_populates="expense_categorys")

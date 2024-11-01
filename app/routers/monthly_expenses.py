@@ -20,14 +20,14 @@ def read_monthly_expenses(response: Response, page: int = 1, limit: int = 50,
             case "standard":
                 monthly_expenses = monthly_expense_crud.get_all_expenses(db, page, limit, order_by, due_date, where)
             case "grouped_by_month":
-                print("entrou")
                 monthly_expenses = monthly_expense_crud.get_expenses_grouped_by_month(db, where)
-        
+            case "grouped_by_category":
+                monthly_expenses = monthly_expense_crud.get_expenses_grouped_by_category(db, where)
+
         return monthly_expenses
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         raise
-        return e
 
 @router.get("/{expense_id}")
 def read_monthly_expense_by_id(expense_id: int, response: Response, db: Session = Depends(get_db)):

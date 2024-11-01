@@ -268,3 +268,30 @@ def get_expenses_grouped_by_month(db: Session, where: str):
 
     return expenses_dict
 
+def get_expenses_grouped_by_category(db: Session, where: str):
+    """Get all expenses grouped by month and category"""
+    where = where if where is not None else datetime.now().strftime("%Y-%m")
+    expenses = (db
+                .query(
+                    func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"),
+                    expense_category_model.ExpenseCategory.description.label("category"),
+                    func.sum(model.MonthlyExpense.amount)
+                )
+                .join(expense_category_model.ExpenseCategory)
+                .where(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") == where)
+                .group_by(
+                    func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"),
+                    expense_category_model.ExpenseCategory.description
+                )
+                .all())
+    
+    expenses_dict = []
+
+    for expense in expenses:
+        expenses_dict.append({
+            "ano_mes": expense[0],
+            "category": expense[1],
+            "total": expense[2]
+        })
+    
+    return expenses_dict

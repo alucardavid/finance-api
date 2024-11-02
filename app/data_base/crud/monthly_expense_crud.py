@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import text, func, or_, and_
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..schemas import monthly_expense_schema
 from ..models import monthly_expense_model as model
 from ..models import form_of_payment_model
 from ..models import expense_category_model
 from ..models import balance_model
-import sys
+import sys, json
 
 def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
     """Get all monthly expenses"""
@@ -160,28 +160,33 @@ def get_expense_by_id(db: Session, expense_id):
                 .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .where(model.MonthlyExpense.id == expense_id).one())
 
-def create_expense(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
+async def create_expense(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
     """Create a new expense"""
-    db_expense = model.MonthlyExpense(
-        place = new_expense.place,
-        description = new_expense.description,
-        date = new_expense.date,
-        amount = new_expense.amount,
-        total_plots = new_expense.total_plots,
-        current_plot = new_expense.current_plot,
-        due_date = new_expense.due_date,
-        status = "Pendente",
-        created_at = datetime.now(),
-        expense_category_id = new_expense.expense_category_id,
-        form_of_payment_id = new_expense.form_of_payment_id,
-        user_id = 1
-    )
-    
-    db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
+    expenses = []
 
-    return db_expense
+    for i in range(new_expense.current_plot, new_expense.total_plots + 1):
+        db_expense = model.MonthlyExpense(
+            place = new_expense.place,
+            description = new_expense.description,
+            date = new_expense.date,
+            amount = new_expense.amount,
+            total_plots = new_expense.total_plots,
+            current_plot = i,
+            due_date = (new_expense.due_date + timedelta(days=((i-1) * 30))).replace(day=new_expense.due_date.day) if i > 1 else new_expense.due_date,
+            status = "Pendente",
+            created_at = datetime.now(),
+            expense_category_id = new_expense.expense_category_id,
+            form_of_payment_id = new_expense.form_of_payment_id,
+            user_id = 1
+        )
+        
+        db.add(db_expense)
+        db.commit()
+        db.refresh(db_expense)
+
+        expenses.append(db_expense.__dict__)
+    
+    return expenses
 
 def delete_expense(db: Session, expense_id: int):
     """Delete a expense"""

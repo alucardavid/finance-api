@@ -39,13 +39,15 @@ def read_monthly_expense_by_id(expense_id: int, response: Response, db: Session 
         response.status_code = status.HTTP_404_NOT_FOUND
 
 @router.post("/")
-def create_monthly_expense(response: Response, new_expense: monthly_expense_schema.MonthlyExpenseCreate, db: Session = Depends(get_db)):
+async def create_monthly_expense(response: Response, new_expense: monthly_expense_schema.MonthlyExpenseCreate, db: Session = Depends(get_db)):
     """Create a new expense"""
     try:
-        return monthly_expense_crud.create_expense(db, new_expense)
+        expenses =  await monthly_expense_crud.create_expense(db, new_expense)
+        return expenses
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
-        return { "error_message": e}
+        raise
+        
     
 @router.delete("/{expense_id}")
 def delete_monthly_expense(expense_id: int, response: Response, db: Session = Depends(get_db)):

@@ -230,6 +230,9 @@ def update_expense(db: Session, expense_id: int, new_expense: monthly_expense_sc
         if new_expense.form_of_payment_id is not None:
             db_expense.form_of_payment_id = new_expense.form_of_payment_id
 
+        if new_expense.status is not None:
+            db_expense.status = new_expense.status
+
         db_expense.updated_at = datetime.now()
         db.commit()
         db.refresh(db_expense)

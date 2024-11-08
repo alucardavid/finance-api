@@ -154,3 +154,27 @@ def update_incoming(db: Session, incoming_id: int, new_incoming: schema.Incoming
 
         return db_incoming
 
+def get_incomings_grouped_by_month(db: Session, where: str):
+    """Get all incomings grouped by month"""
+    where = where if where is not None else datetime.now().strftime("%Y-%m")
+    incomings = (db.query(
+        func.to_char(model.Incoming.date, "yyyy-MM").label("ano_mes"),
+        func.sum(model.Incoming.amount).label("total")
+    )
+    .where(
+        func.to_char(model.Incoming.date, "yyyy-MM") >= where,
+        model.Incoming.status == "Pendente"
+    )
+    .group_by(func.to_char(model.Incoming.date, "yyyy-MM"))
+    .order_by(func.to_char(model.Incoming.date, "yyyy-MM"))
+    .all())
+
+    incomings_dict = []
+
+    for incoming in incomings:
+        incomings_dict.append({
+            "anoe_mes": incoming[0],
+            "total": incoming[1]
+        })
+    
+    return incomings_dict

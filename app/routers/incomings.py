@@ -16,7 +16,7 @@ def read_incomings(
     """Retrieve all incomings"""
 
     match type_return:
-        case "standar":
+        case "standard":
             incomings = crud.get_incomings(db, page, limit, status, order_by, where)
         case "grouped_by_month":
             incomings = crud.get_incomings_grouped_by_month(db, where)

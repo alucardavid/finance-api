@@ -263,11 +263,14 @@ def pay_expenses(db: Session, expenses_id: monthly_expense_schema.MonthlyExpense
 def get_expenses_grouped_by_month(db: Session, where: str):
     """Get all expenses grouped by month"""
     where = where if where is not None else datetime.now().strftime("%Y-%m")
-    expenses = (db.query(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"), func.sum(model.MonthlyExpense.amount).label("total"))
-                    .where(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") >= where)
-                    .group_by(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"))
-                    .order_by(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"), )
-                    .all())
+    expenses = (db.query(
+        func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"), 
+        func.sum(model.MonthlyExpense.amount).label("total")
+    )
+    .where(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") >= where)
+    .group_by(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"))
+    .order_by(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"), )
+    .all())
     
     expenses_dict = []
 

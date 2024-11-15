@@ -306,3 +306,32 @@ def get_expenses_grouped_by_category(db: Session, where: str):
         })
     
     return expenses_dict
+
+def get_all_descriptions(db: Session, where: str):
+    """Get all descriptions"""
+    items = []
+    db_descriptions = (db
+                    .query(model.MonthlyExpense.description)
+                    .where(func.lower(model.MonthlyExpense.description).like(f"%{where.lower()}%"))
+                    .group_by(model.MonthlyExpense.description)
+                    .order_by(model.MonthlyExpense.description)
+                    .all())
+    count = (db
+        .query(model.MonthlyExpense.description)
+        .where(func.lower(model.MonthlyExpense.description).like(f"%{where.lower()}%"))
+        .group_by(model.MonthlyExpense.description)
+        .count()
+    )
+
+    for description in db_descriptions:
+        print(description)
+        items.append(description[0])
+
+    descriptions = {
+        "count": count,
+        "items": items
+    }
+    
+
+    return descriptions
+    

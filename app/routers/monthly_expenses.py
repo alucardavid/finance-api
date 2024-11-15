@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, status, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from ..data_base.models import monthly_expense_model
 from ..data_base.schemas import monthly_expense_schema
 from ..data_base.crud import monthly_expense_crud
 from ..data_base.database import engine, get_db
 from typing import List, Optional
+import json
 
 monthly_expense_model.Base.metadata.create_all(bind=engine)
 
@@ -101,3 +103,8 @@ def pay_monthly_expenses(expenses_id: List[int], response: Response, db: Session
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         return { "error_message": e}
     
+@router.get("/descriptions/")
+def read_all_descriptions(where: str, response: Response, db: Session = Depends(get_db)):
+    """Get all descriptions withou repetitions"""
+
+    return monthly_expense_crud.get_all_descriptions(db, where)

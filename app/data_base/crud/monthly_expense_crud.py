@@ -324,7 +324,6 @@ def get_all_descriptions(db: Session, where: str):
     )
 
     for description in db_descriptions:
-        print(description)
         items.append(description[0])
 
     descriptions = {

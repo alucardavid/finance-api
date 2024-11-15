@@ -116,3 +116,61 @@ def update_expense(db: Session, expense_id: int, new_expense: schema.VariableExp
         db.refresh(db_expense)
 
     return db_expense
+
+def get_all_places(db: Session, where: str):
+    """Get all places"""
+    items = []
+
+    db_places = (
+        db.query(model.VariableExpense.place)
+        .where(func.lower(model.VariableExpense.place).like(f"{where.lower()}%"))
+        .group_by(model.VariableExpense.place)
+        .order_by(model.VariableExpense.place)
+        .all()
+    )
+    
+    count = (
+        db.query(model.VariableExpense.place)
+        .where(func.lower(model.VariableExpense.place).like(f"{where.lower()}%"))
+        .group_by(model.VariableExpense.place)
+        .count()
+    )
+
+    for place in db_places:
+        items.append(place[0])
+
+    places = {
+        "total": count,
+        "items": items
+    }
+
+    return places
+
+def get_all_descriptions(db: Session, where: str):
+    """Get all descriptions"""
+    items = []
+
+    db_descriptions = (
+        db.query(model.VariableExpense.description)
+        .where(func.lower(model.VariableExpense.description).like(f"{where.lower()}%"))
+        .group_by(model.VariableExpense.description)
+        .order_by(model.VariableExpense.description)
+        .all()
+    )
+    
+    count = (
+        db.query(model.VariableExpense.description)
+        .where(func.lower(model.VariableExpense.description).like(f"{where.lower()}%"))
+        .group_by(model.VariableExpense.description)
+        .count()
+    )
+
+    for description in db_descriptions:
+        items.append(description[0])
+
+    descriptions = {
+        "total": count,
+        "items": items
+    }
+
+    return descriptions

@@ -312,13 +312,13 @@ def get_all_descriptions(db: Session, where: str):
     items = []
     db_descriptions = (db
                     .query(model.MonthlyExpense.description)
-                    .where(func.lower(model.MonthlyExpense.description).like(f"%{where.lower()}%"))
+                    .where(func.lower(model.MonthlyExpense.description).like(f"{where.lower()}%"))
                     .group_by(model.MonthlyExpense.description)
                     .order_by(model.MonthlyExpense.description)
                     .all())
     count = (db
         .query(model.MonthlyExpense.description)
-        .where(func.lower(model.MonthlyExpense.description).like(f"%{where.lower()}%"))
+        .where(func.lower(model.MonthlyExpense.description).like(f"{where.lower()}%"))
         .group_by(model.MonthlyExpense.description)
         .count()
     )
@@ -327,7 +327,7 @@ def get_all_descriptions(db: Session, where: str):
         items.append(description[0])
 
     descriptions = {
-        "count": count,
+        "total": count,
         "items": items
     }
     

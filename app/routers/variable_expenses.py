@@ -48,4 +48,14 @@ def update_variable_expense(expense_id, response: Response, new_expense: schema.
     """Update a expense"""
     return crud.update_expense(db, expense_id, new_expense)
 
-    
+@router.get("/places/") 
+def read_all_places(where: str, response: Response, db: Session = Depends(get_db)):
+    """Get all places"""
+
+    return crud.get_all_places(db, where)
+
+@router.get("/descriptions/") 
+def read_all_descriptions(where: str, response: Response, db: Session = Depends(get_db)):
+    """Get all descriptions"""
+
+    return crud.get_all_descriptions(db, where)

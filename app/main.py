@@ -40,7 +40,7 @@ app.include_router(expense_categorys.router, prefix="/expense-categorys", tags=[
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World Mother Fucker"}
+    return {"message": "Hello World Mother Fucker Teste WatchTower"}
 
 
 if __name__ == "__main__":

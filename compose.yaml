@@ -9,8 +9,6 @@ services:
       DB_CONNECTION_STRING: ${DB_CONNECTION_STRING}
     networks:
       finance:
-        ipv4_address: 172.19.0.3
-
   finance-app:
     image: dpereira99/finance-app:latest
     container_name: finance-app
@@ -19,9 +17,8 @@ services:
       - 8002:8000
     networks:
       finance:
-        ipv4_address: 172.19.0.2
     depends_on:
-     - finance-api
+      - finance-api
 
   watchtower:
     container_name: watchtower
@@ -35,7 +32,3 @@ services:
 networks:
   finance:
     driver: bridge
-    ipam:
-     config:
-       - subnet: 172.19.0.0/16
-         gateway: 172.19.0.1

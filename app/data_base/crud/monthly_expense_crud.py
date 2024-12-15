@@ -307,6 +307,45 @@ def get_expenses_grouped_by_category(db: Session, where: str):
     
     return expenses_dict
 
+def get_expenses_grouped_by_place(db: Session, where: str ):
+    """Get all expenses grouped by place
+
+    Parameters:
+        db (Session): Session of database
+        where (str): This variable is to get a monthly and year at the format "YYYY-mm"
+
+    Returns:
+        expenses: Return a query with expenses grouped by place, including the amount.
+
+
+    """
+    where = where if where is not None else datetime.now().strftime("%Y-%m")
+    expenses = (
+        db.query(
+            func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"),
+            model.MonthlyExpense.place,
+            func.sum(model.MonthlyExpense.amount)
+        )
+        .where(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") == where)
+        .group_by(
+            func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"),
+            model.MonthlyExpense.place
+        )
+        .all()
+    )
+
+    expenses_dict = []
+
+    for expense in expenses:
+        expenses_dict.append({
+            "ano_mes": expense[0],
+            "category": expense[1],
+            "total": expense[2]
+        })
+    
+    return expenses_dict
+    
+
 def get_all_descriptions(db: Session, where: str):
     """Get all descriptions"""
     items = []

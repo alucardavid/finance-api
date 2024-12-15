@@ -339,7 +339,7 @@ def get_expenses_grouped_by_place(db: Session, where: str ):
     for expense in expenses:
         expenses_dict.append({
             "ano_mes": expense[0],
-            "category": expense[1],
+            "place": expense[1],
             "total": expense[2]
         })
     

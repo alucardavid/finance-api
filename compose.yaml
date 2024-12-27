@@ -1,3 +1,5 @@
+name: finance
+
 services:
   finance-api:
     image: dpereira99/finance-api:latest

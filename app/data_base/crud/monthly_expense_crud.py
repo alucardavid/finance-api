@@ -307,7 +307,7 @@ def get_expenses_grouped_by_category(db: Session, where: str):
     
     return expenses_dict
 
-def get_expenses_grouped_by_place(db: Session, where: str ):
+def get_expenses_grouped_by_place(db: Session, due_date: str, status: str):
     """Get all expenses grouped by place
 
     Parameters:
@@ -319,20 +319,39 @@ def get_expenses_grouped_by_place(db: Session, where: str ):
 
 
     """
-    where = where if where is not None else datetime.now().strftime("%Y-%m")
-    expenses = (
-        db.query(
-            func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"),
-            model.MonthlyExpense.place,
-            func.sum(model.MonthlyExpense.amount)
+    due_date = due_date if due_date is not None else datetime.now().strftime("%Y-%m")
+
+    if not status:
+        expenses = (
+            db.query(
+                func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"),
+                model.MonthlyExpense.place,
+                func.sum(model.MonthlyExpense.amount)
+            )
+            .where(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") == due_date)
+            .group_by(
+                func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"),
+                model.MonthlyExpense.place
+            )
+            .all()
         )
-        .where(func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") == where)
-        .group_by(
-            func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"),
-            model.MonthlyExpense.place
+    else:
+        expenses = (
+            db.query(
+                func.to_char(model.MonthlyExpense.due_date, "yyyy-MM").label("ano_mes"),
+                model.MonthlyExpense.place,
+                func.sum(model.MonthlyExpense.amount)
+            )
+            .where(and_(
+                func.to_char(model.MonthlyExpense.due_date, "yyyy-MM") == due_date,
+                model.MonthlyExpense.status.like(status)
+            ))
+            .group_by(
+                func.to_char(model.MonthlyExpense.due_date, "yyyy-MM"),
+                model.MonthlyExpense.place
+            )
+            .all()
         )
-        .all()
-    )
 
     expenses_dict = []
 

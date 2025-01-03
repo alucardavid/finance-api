@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/")
 def read_monthly_expenses(response: Response, page: int = 1, limit: int = 50, 
                           order_by: str = "monthly_expenses.id desc", due_date: str = None, 
-                          where: str = None, type_return: str = "standard", db: Session = Depends(get_db)):
+                          where: str = None, type_return: str = "standard", status: str = None, db: Session = Depends(get_db)):
     """Retrieve all monthly expenses"""
     try:
         match type_return:
@@ -24,9 +24,9 @@ def read_monthly_expenses(response: Response, page: int = 1, limit: int = 50,
             case "grouped_by_month":
                 monthly_expenses = crud.get_expenses_grouped_by_month(db, where)
             case "grouped_by_category":
-                monthly_expenses = crud.get_expenses_grouped_by_category(db, where)
+                monthly_expenses = crud.get_expenses_grouped_by_category(db, due_date)
             case "grouped_by_place":
-                monthly_expenses = crud.get_expenses_grouped_by_place(db, where)
+                monthly_expenses = crud.get_expenses_grouped_by_place(db, due_date, status)
 
         return monthly_expenses
     except Exception as e:

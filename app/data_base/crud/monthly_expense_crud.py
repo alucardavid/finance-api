@@ -363,8 +363,7 @@ def get_expenses_grouped_by_place(db: Session, due_date: str, status: str):
         })
     
     return expenses_dict
-    
-
+ 
 def get_all_descriptions(db: Session, where: str):
     """Get all descriptions"""
     items = []
@@ -392,3 +391,15 @@ def get_all_descriptions(db: Session, where: str):
 
     return descriptions
     
+def expense_exist(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
+    """Check if the expense already exist in database"""
+    db_expense = (db.query(model.MonthlyExpense)
+                    .where(and_(
+                        model.MonthlyExpense.description == new_expense.description,
+                        model.MonthlyExpense.place == new_expense.place,
+                        model.MonthlyExpense.amount == new_expense.amount,
+                        model.MonthlyExpense.date == new_expense.date
+                    )))
+    
+    return db_expense.count() > 0
+

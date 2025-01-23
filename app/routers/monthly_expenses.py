@@ -45,9 +45,20 @@ def read_monthly_expense_by_id(expense_id: int, response: Response, db: Session 
 @router.post("/")
 async def create_monthly_expense(response: Response, new_expense: monthly_expense_schema.MonthlyExpenseCreate, db: Session = Depends(get_db)):
     """Create a new expense"""
+    expenses = []
     try:
-        expenses =  await crud.create_expense(db, new_expense)
-        return expenses
+        if not crud.expense_exist(db, new_expense):
+            if new_expense.total_plots > 1:
+                db_expense = crud.expense_not_exist_check_amount(db, new_expense)
+                if db_expense is not None:
+                    expense = crud.update_expense(db, db_expense.id, monthly_expense_schema.MonthlyExpenseUpdate(amount=new_expense.amount))
+                    return expense
+            else:
+                expenses =  await crud.create_expense(db, new_expense)
+                return expenses
+        else:
+            response.status_code = status.HTTP_406_NOT_ACCEPTABLE
+            return { "error_message": "Expense already exists" }
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
         raise

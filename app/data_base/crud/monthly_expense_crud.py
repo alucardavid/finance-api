@@ -165,6 +165,14 @@ async def create_expense(db: Session, new_expense: monthly_expense_schema.Monthl
     expenses = []
 
     for i in range(new_expense.current_plot, new_expense.total_plots + 1):
+        if new_expense.total_plots > 1:
+            # Format the description with the plot number
+            description_tmp = new_expense.description.split('(')[0]
+            total_plots = new_expense.total_plots if new_expense.total_plots > 9 else f"0{new_expense.total_plots}"
+            current_plot = i if i > 9 else f"0{i}"
+            plots_string = f"({current_plot}/{total_plots})"
+            new_expense.description = description_tmp + plots_string
+        
         db_expense = model.MonthlyExpense(
             place = new_expense.place,
             description = new_expense.description,
@@ -395,11 +403,25 @@ def expense_exist(db: Session, new_expense: monthly_expense_schema.MonthlyExpens
     """Check if the expense already exist in database"""
     db_expense = (db.query(model.MonthlyExpense)
                     .where(and_(
-                        model.MonthlyExpense.description == new_expense.description,
                         model.MonthlyExpense.place == new_expense.place,
                         model.MonthlyExpense.amount == new_expense.amount,
-                        model.MonthlyExpense.date == new_expense.date
+                        model.MonthlyExpense.date == new_expense.date,
+                        model.MonthlyExpense.total_plots == new_expense.total_plots,
+                        model.MonthlyExpense.current_plot == new_expense.current_plot,
                     )))
     
     return db_expense.count() > 0
 
+def expense_not_exist_check_amount(db: Session, new_expense: monthly_expense_schema.MonthlyExpenseCreate):
+    """Check if the expense not exist in database and check if the amount is different"""
+    db_expense = (db.query(model.MonthlyExpense)
+                    .where(and_(
+                        model.MonthlyExpense.place == new_expense.place,
+                        model.MonthlyExpense.date == new_expense.date,
+                        model.MonthlyExpense.total_plots == new_expense.total_plots,
+                        model.MonthlyExpense.current_plot == new_expense.current_plot,
+                        model.MonthlyExpense.amount != new_expense.amount
+                    )).one_or_none())
+    
+    return db_expense
+    

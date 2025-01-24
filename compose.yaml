@@ -26,6 +26,7 @@ services:
       DB_PORT: ${DB_PORT}
       API_HOST: ${API_HOST}
       SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
     networks:
       finance:
     depends_on:

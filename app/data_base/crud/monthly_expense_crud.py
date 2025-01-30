@@ -7,6 +7,11 @@ from ..models import monthly_expense_model as model
 from ..models import form_of_payment_model
 from ..models import expense_category_model
 from ..models import balance_model
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+import pandas as pd
 import sys, json
 
 def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
@@ -183,7 +188,7 @@ async def create_expense(db: Session, new_expense: monthly_expense_schema.Monthl
             due_date = (new_expense.due_date + timedelta(days=((i-1) * 30))).replace(day=new_expense.due_date.day) if i > 1 else new_expense.due_date,
             status = "Pendente",
             created_at = datetime.now(),
-            expense_category_id = new_expense.expense_category_id,
+            expense_category_id = new_expense.expense_category_id if new_expense.expense_category_id is not 24 else await _predict_category_by_description(db, new_expense.description), # 24 is the id of the category "Desconhecido"
             form_of_payment_id = new_expense.form_of_payment_id,
             user_id = 1
         )
@@ -424,4 +429,48 @@ def expense_not_exist_check_amount(db: Session, new_expense: monthly_expense_sch
                     )).one_or_none())
     
     return db_expense
+    
+async def _predict_category_by_description(db: Session, description: str):
+    """Predict the category of the expense by description"""
+    
+    # Get all descriptions
+    db_categorys = (db.query(
+                        model.MonthlyExpense.description, 
+                        model.MonthlyExpense.expense_category_id, 
+                        expense_category_model.ExpenseCategory.description)
+                    .join(expense_category_model.ExpenseCategory)
+                    .group_by(
+                        model.MonthlyExpense.description, 
+                        model.MonthlyExpense.expense_category_id, 
+                        expense_category_model.ExpenseCategory.description)
+                    .all())
+    
+    # Set columns to dataframe
+    columns = ["description", "category_id", "category"]
+
+    # Create a dataframe
+    df_categorys = pd.DataFrame(db_categorys, columns=columns)
+
+    # Create a dictionary with the descriptions and categories
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform(df_categorys['description'])
+    y = df_categorys['category_id']
+
+    # Split the data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    # Initialize and train the classifier
+    clf = SVC(kernel='linear')
+    clf.fit(X_train, y_train)
+
+    # Predict by description
+    text_vec = vectorizer.transform([description])
+    prediction = clf.predict(text_vec)
+
+    category_id = prediction[0]
+
+    return int(category_id)
+
+                    
+    
     

@@ -53,6 +53,9 @@ async def create_monthly_expense(response: Response, new_expense: monthly_expens
                 if db_expense is not None:
                     expense = crud.update_expense(db, db_expense.id, monthly_expense_schema.MonthlyExpenseUpdate(amount=new_expense.amount))
                     return expense
+                else:
+                    expenses =  await crud.create_expense(db, new_expense)
+                    return expenses
             else:
                 expenses =  await crud.create_expense(db, new_expense)
                 return expenses

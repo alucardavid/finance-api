@@ -188,7 +188,7 @@ async def create_expense(db: Session, new_expense: monthly_expense_schema.Monthl
             due_date = (new_expense.due_date + timedelta(days=((i-1) * 30))).replace(day=new_expense.due_date.day) if i > 1 else new_expense.due_date,
             status = "Pendente",
             created_at = datetime.now(),
-            expense_category_id = new_expense.expense_category_id if new_expense.expense_category_id is not 24 else await _predict_category_by_description(db, new_expense.description), # 24 is the id of the category "Desconhecido"
+            expense_category_id = new_expense.expense_category_id if new_expense.expense_category_id != 24 else await _predict_category_by_description(db, new_expense.description), # 24 is the id of the category "Desconhecido"
             form_of_payment_id = new_expense.form_of_payment_id,
             user_id = 1
         )

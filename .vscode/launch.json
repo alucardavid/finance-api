@@ -1,21 +1,29 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python Debugger: FastAPI",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "uvicorn",
-            "args": [
-                "app.main:app",
-                "--reload",
-                "--port",
-                "7000"
-            ],
-            "jinja": true
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+    "name": "Python Debugger: Django",
+    "type": "debugpy",
+    "request": "launch",
+    "args": ["runserver", "8001"],  // Change port here
+    "django": true,
+    "autoStartBrowser": false,
+    "program": "c:\\Repos\\finance-app\\manage.py",
+    "env": {                        // Add environment variables
+        "DEBUG": "True",
+        "DJANGO_SETTINGS_MODULE": "finance-app.settings"
         }
-    ]
+    },
+    {
+      "name": "Python Debugger: FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "7000"],
+      "jinja": true
+    }
+  ]
 }

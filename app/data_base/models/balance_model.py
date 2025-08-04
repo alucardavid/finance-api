@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Numeric, BigInteger, Sequence
 from sqlalchemy.orm import relationship, Mapped
 from ..database import Base
@@ -12,4 +13,6 @@ class Balance(Base):
     updated_at = Column(DateTime, nullable=True)
     user_id = Column(Integer)
     show = Column(String)
+    id_account_bank = Column(String, nullable=True)
+    id_connector = Column(Integer, nullable=True)
     form_of_payments = relationship("FormOfPayment", back_populates="balances")

@@ -55,7 +55,6 @@ def update_balance(db: Session, balance_id: int, new_balance: balance_schema.Bal
         db_balance.updated_at = datetime.now()
         db.commit()
         db.refresh(db_balance)
-        logger.info(f"Balance {balance_id} updated successfully. New values: {new_balance}")
         return db_balance
     else:
         return None

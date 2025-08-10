@@ -17,4 +17,4 @@ class Balance(Base):
     id_connector = Column(Integer, nullable=True)
     status_open_finance = Column(String, nullable=True)
     id_item = Column(String, nullable=True)
-    form_of_payments = relationship("FormOfPayment", back_populates="balances")
+    form_of_payments = relationship("FormOfPayment", back_populates="balance")

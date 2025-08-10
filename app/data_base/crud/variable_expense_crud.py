@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from sqlalchemy.orm import Session, joinedload, defaultload
 from sqlalchemy.sql import text, func, or_, and_
 from typing import List
@@ -6,48 +7,47 @@ from ..schemas import variable_expense_schema as schema
 from ..models import variable_expense_model as model
 from ..models import form_of_payment_model 
 
-def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", where: str = None):
+def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", where: str = None, balance_id: int = None) -> dict:
     """Get all variable expenses"""
 
-    if where is None:
-        items = (db.query(model.VariableExpense)
-                .options(joinedload(model.VariableExpense.form_of_payments)
-                        .joinedload(form_of_payment_model.FormOfPayment.balances))
-                .order_by(text(order_by))
-                .offset((page * limit) - limit)
-                .limit(limit).all())
-        
-        count = (db.query(model.VariableExpense).count())
-    else:
-        items = (db.query(model.VariableExpense)
-                .join(form_of_payment_model.FormOfPayment)
-                .options(joinedload(model.VariableExpense.form_of_payments)
-                        .joinedload(form_of_payment_model.FormOfPayment.balances))
-                .where(or_(
-                    model.VariableExpense.place.like(f"%{where}%"),
-                    model.VariableExpense.description.like(f"%{where}%"),
-                    model.VariableExpense.type.like(f"%{where}%"),
-                    func.to_char(model.VariableExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
-                    func.replace(func.replace(func.replace(func.to_char(model.VariableExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
-                    form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
-                ))
-                .order_by(text(order_by))
-                .offset((page * limit) - limit)
-                .limit(limit).all())
-        
-        count = (db.query(model.VariableExpense)
-                .join(form_of_payment_model.FormOfPayment)
-                .options(joinedload(model.VariableExpense.form_of_payments)
-                        .joinedload(form_of_payment_model.FormOfPayment.balances))
-                .where(or_(
-                    model.VariableExpense.place.like(f"%{where}%"),
-                    model.VariableExpense.description.like(f"%{where}%"),
-                    model.VariableExpense.type.like(f"%{where}%"),
-                    func.to_char(model.VariableExpense.date, "dd/MM/yyyy").like(f"%{where}%"),
-                    func.replace(func.replace(func.replace(func.to_char(model.VariableExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"),
-                    form_of_payment_model.FormOfPayment.description.like(f"%{where}%")
-                )).count())
-        
+    filters = []
+    all_filters = []
+
+    if where:
+        filters.append(model.VariableExpense.place.like(f"%{where}%"))
+        filters.append(model.VariableExpense.description.like(f"%{where}%"))
+        filters.append(model.VariableExpense.type.like(f"%{where}%"))
+        filters.append(func.to_char(model.VariableExpense.date, "dd/MM/yyyy").like(f"%{where}%"))
+        filters.append(func.replace(func.replace(func.replace(func.to_char(model.VariableExpense.amount, "999G999D00"), ",", "v"), ".", ","), "v", ".").like(f"%{where}%"))
+        filters.append(form_of_payment_model.FormOfPayment.description.like(f"%{where}%"))
+
+    # Create the query with joinedload to eagerly load related FormOfPayment and Balance
+    query = db.query(model.VariableExpense).join(form_of_payment_model.FormOfPayment).options(
+        joinedload(model.VariableExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balance)
+    ) 
+
+    # If there are filters, apply them
+    if where:
+        all_filters.append(or_(*filters))
+
+    # If balance_id is provided, filter by balance_id    
+    if balance_id:
+        all_filters.append(and_(form_of_payment_model.FormOfPayment.balance_id == balance_id))
+
+    if all_filters:
+        query = query.filter(*all_filters)
+    
+    count_query = query
+
+    # Validate order_by input
+    if order_by.strip().lower() == "desc" or order_by.strip().lower() == "asc":
+        order_by = "variable_expenses.id desc"  # Default safe value
+    elif not order_by:
+        order_by = "variable_expenses.id asc"  # Default safe value
+
+    items = query.order_by(text(order_by)).offset((page * limit) - limit).limit(limit).all()
+    count = count_query.count()
+    
     result = {
         'count': count,
         'total_pages': int((count/ limit)+1),
@@ -60,10 +60,13 @@ def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str
 
 def get_expense(db: Session, expense_id: int):
     """Get expense by id"""
-    return db.query(model.VariableExpense).options(joinedload(model.VariableExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balances)).get(expense_id)
+    return db.query(model.VariableExpense).options(joinedload(model.VariableExpense.form_of_payments).joinedload(form_of_payment_model.FormOfPayment.balance)).get(expense_id)
 
-def add_expense(db: Session, new_expense: schema.VariableExpenseCreate):
+def add_expense(db: Session, new_expense: schema.VariableExpenseCreate, update_balance=False):
     """Create a new expense"""
+    if _expense_exists(db, new_expense):
+        return {"error": "Expense already exists"}
+
     db_expense = model.VariableExpense(
         description = new_expense.description,
         type = new_expense.type,
@@ -77,13 +80,15 @@ def add_expense(db: Session, new_expense: schema.VariableExpenseCreate):
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
-    
-    if new_expense.type == "Despesa":
-        db_expense.form_of_payments.balances.value -= new_expense.amount
-        db_expense.form_of_payments.balances.updated_at = datetime.now()
-    else:
-        db_expense.form_of_payments.balances.value += new_expense.amount
-        db_expense.form_of_payments.balances.updated_at = datetime.now()
+
+    # Update the balance if necessary
+    if update_balance:
+        if new_expense.type == "Despesa":
+            db_expense.form_of_payments.balance.value -= new_expense.amount
+            db_expense.form_of_payments.balance.updated_at = datetime.now()
+        else:
+            db_expense.form_of_payments.balance.value += new_expense.amount
+            db_expense.form_of_payments.balance.updated_at = datetime.now()
 
     db.commit()
     db.refresh(db_expense)
@@ -174,3 +179,13 @@ def get_all_descriptions(db: Session, where: str):
     }
 
     return descriptions
+
+def _expense_exists(db: Session, expense: schema.VariableExpenseCreate) -> bool:
+    return db.query(model.VariableExpense).filter_by(
+        description=expense.description,
+        amount=expense.amount,
+        date=expense.date,
+        type=expense.type,
+        form_of_payment_id=expense.form_of_payment_id,
+        place=expense.place
+    ).first() is not None

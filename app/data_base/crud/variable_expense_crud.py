@@ -65,7 +65,8 @@ def get_expense(db: Session, expense_id: int):
 def add_expense(db: Session, new_expense: schema.VariableExpenseCreate, update_balance=False):
     """Create a new expense"""
     if _expense_exists(db, new_expense):
-        return {"error": "Expense already exists"}
+       logger.warning(f"Expense already exists: {new_expense.id_transaction}")
+       return
 
     db_expense = model.VariableExpense(
         description = new_expense.description,
@@ -75,7 +76,8 @@ def add_expense(db: Session, new_expense: schema.VariableExpenseCreate, update_b
         created_at = datetime.now(),
         form_of_payment_id = new_expense.form_of_payment_id,
         place = new_expense.place,
-        user_id = 1
+        user_id = 1,
+        id_transaction = new_expense.id_transaction
     )
     db.add(db_expense)
     db.commit()
@@ -117,6 +119,7 @@ def update_expense(db: Session, expense_id: int, new_expense: schema.VariableExp
         db_expense.amount = new_expense.amount
         db_expense.form_of_payment_id = new_expense.form_of_payment_id
         db_expense.updated_at = datetime.now()
+        db_expense.id_transaction = new_expense.id_transaction  
         db.commit()
         db.refresh(db_expense)
 
@@ -182,10 +185,5 @@ def get_all_descriptions(db: Session, where: str):
 
 def _expense_exists(db: Session, expense: schema.VariableExpenseCreate) -> bool:
     return db.query(model.VariableExpense).filter_by(
-        description=expense.description,
-        amount=expense.amount,
-        date=expense.date,
-        type=expense.type,
-        form_of_payment_id=expense.form_of_payment_id,
-        place=expense.place
+        id_transaction=expense.id_transaction,
     ).first() is not None

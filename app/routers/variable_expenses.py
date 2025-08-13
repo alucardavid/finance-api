@@ -34,7 +34,7 @@ def read_variable_expense(expense_id: int, response: Response, db: Session = Dep
 def add_variable_expense(response: Response, new_expense: schema.VariableExpenseCreate, update_balance: bool = False, db: Session = Depends(get_db)):
     """Create a new expense"""
     expense = crud.add_expense(db, new_expense, update_balance)
-    if "error" in expense:
+    if expense is None:
         response.status_code = status.HTTP_409_CONFLICT
     return expense
 
@@ -61,3 +61,13 @@ def read_all_descriptions(where: str, response: Response, db: Session = Depends(
     """Get all descriptions"""
 
     return crud.get_all_descriptions(db, where)
+
+@router.post("/bulk")
+def create_variable_expenses(response: Response, expenses: List[schema.VariableExpenseCreate], db: Session = Depends(get_db)):
+    """Create multiple variable expenses"""
+    created_expenses = []
+    for expense in expenses:
+        created_expense = crud.add_expense(db, expense)
+        if created_expense is not None:
+            created_expenses.append(created_expense)
+    return created_expenses

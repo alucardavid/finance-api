@@ -17,5 +17,6 @@ class VariableExpense(Base):
     updated_at = Column(Integer)
     form_of_payment_id = Column(Integer, ForeignKey("form_of_payments.id"))
     user_id = Column(Integer)
+    id_transaction = Column(String, nullable=True)
     form_of_payments = relationship("FormOfPayment", back_populates="variable_expenses")
     

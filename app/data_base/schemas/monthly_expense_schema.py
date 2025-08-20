@@ -23,7 +23,7 @@ class MonthlyExpenseCreate(BaseModel):
     place: str = Field(nullable= False, min_length=2)
     description: str = Field(nullable=False, min_length=2)
     date: datetime = Field(nullable=False)
-    amount: Decimal = Field(gt=0, nullable=False)
+    amount: Decimal = Field(nullable=False)
     total_plots: int = Field(default= None)
     current_plot: int = Field(default= None)
     due_date: datetime = Field(nullable=False)

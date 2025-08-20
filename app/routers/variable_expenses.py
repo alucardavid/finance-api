@@ -11,14 +11,14 @@ variable_expense_model.Base.metadata.create_all(bind=engine)
 router = APIRouter()
 
 @router.get("/")
-def read_variable_expenses(response: Response, page: int = 1, limit: int = 50, order_by: str = "variable_expenses.id asc", where: str = None, db: Session = Depends(get_db)):
+def read_variable_expenses(response: Response, page: int = 1, limit: int = 50, order_by: str = "variable_expenses.id asc", where: str = None, balance_id: int = None, db: Session = Depends(get_db)):
     """Retrieve all variable expenses"""
     try:
-        expenses = crud.get_all_expenses(db, page, limit, order_by, where)
+        expenses = crud.get_all_expenses(db, page, limit, order_by, where, balance_id)
         return expenses
     except Exception as e:
         response.status_code = status.HTTP_406_NOT_ACCEPTABLE
-        return { "error_message": e}
+        return { "error_message": e.__str__() }
 
 @router.get("/{expense_id}")
 def read_variable_expense(expense_id: int, response: Response, db: Session = Depends(get_db)):
@@ -31,9 +31,11 @@ def read_variable_expense(expense_id: int, response: Response, db: Session = Dep
 
 
 @router.post("/")
-def add_variable_expense(response: Response, new_expense: schema.VariableExpenseCreate, db: Session = Depends(get_db)):
+def add_variable_expense(response: Response, new_expense: schema.VariableExpenseCreate, update_balance: bool = False, db: Session = Depends(get_db)):
     """Create a new expense"""
-    expense = crud.add_expense(db, new_expense)
+    expense = crud.add_expense(db, new_expense, update_balance)
+    if expense is None:
+        response.status_code = status.HTTP_409_CONFLICT
     return expense
 
 @router.delete("/{expense_id}")
@@ -59,3 +61,13 @@ def read_all_descriptions(where: str, response: Response, db: Session = Depends(
     """Get all descriptions"""
 
     return crud.get_all_descriptions(db, where)
+
+@router.post("/bulk")
+def create_variable_expenses(response: Response, expenses: List[schema.VariableExpenseCreate], db: Session = Depends(get_db)):
+    """Create multiple variable expenses"""
+    created_expenses = []
+    for expense in expenses:
+        created_expense = crud.add_expense(db, expense)
+        if created_expense is not None:
+            created_expenses.append(created_expense)
+    return created_expenses

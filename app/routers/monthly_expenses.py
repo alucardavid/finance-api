@@ -124,3 +124,13 @@ def read_all_descriptions(where: str, response: Response, db: Session = Depends(
     """Get all descriptions withou repetitions"""
 
     return crud.get_all_descriptions(db, where)
+
+@router.post("/bulk")
+async def add_bulk_monthly_expenses(expenses: List[monthly_expense_schema.MonthlyExpenseCreate], response: Response, db: Session = Depends(get_db)):
+    """Add multiple monthly expenses"""
+    created_expenses = []
+    for expense in expenses:
+        created_expense = await crud.create_expense(db, expense)
+        if created_expense is not None:
+            created_expenses.append(created_expense)
+    return created_expenses

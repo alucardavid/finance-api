@@ -2,9 +2,15 @@ from fastapi import Depends, FastAPI
 from .routers import balances, monthly_expenses, variable_expenses, form_of_payments, incomings, expense_categorys
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import logging
 
 app = FastAPI()
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# CORS configuration
+# Adjust the origins as needed for your application
 origins = [
     "http://localhost",
     "http://172.19.0.1",

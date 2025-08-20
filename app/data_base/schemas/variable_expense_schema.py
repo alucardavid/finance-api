@@ -28,3 +28,4 @@ class VariableExpenseCreate(BaseModel):
     type: str = Field(nullable=False)
     amount: Decimal = Field(gt=0, nullable=False)
     form_of_payment_id: int
+    id_transaction: str = Field(nullable=True)

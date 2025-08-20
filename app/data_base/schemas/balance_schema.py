@@ -21,6 +21,9 @@ class BalanceUpdate(BaseModel):
     description: str = Field(default= None, min_length=5)
     value: float = Field(default= None)
     show: str = Field(default= None, min_length=1, max_length=1)
+    status_open_finance: str | None = None
+    id_item: str | None = None
+    id_account_bank: str | None = None
 
 class BalanceIncrease(BaseModel):
     value: Decimal = Field(gt=0, nullable=False)   

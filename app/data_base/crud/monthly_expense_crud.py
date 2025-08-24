@@ -1,3 +1,4 @@
+import joblib
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import text, func, or_, and_
 from typing import List
@@ -13,6 +14,9 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report
 import pandas as pd
 import sys, json
+
+vectorizer = joblib.load('model/vectorizer.pkl')
+clf = joblib.load('model/category_clf.pkl')
 
 def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
     """Get all monthly expenses"""
@@ -433,44 +437,48 @@ def expense_not_exist_check_amount(db: Session, new_expense: monthly_expense_sch
 async def _predict_category_by_description(db: Session, description: str):
     """Predict the category of the expense by description"""
     
-    # Get all descriptions
-    db_categorys = (db.query(
-                        model.MonthlyExpense.description, 
-                        model.MonthlyExpense.expense_category_id, 
-                        expense_category_model.ExpenseCategory.description)
-                    .join(expense_category_model.ExpenseCategory)
-                    .group_by(
-                        model.MonthlyExpense.description, 
-                        model.MonthlyExpense.expense_category_id, 
-                        expense_category_model.ExpenseCategory.description)
-                    .all())
+    # # Get all descriptions
+    # db_categorys = (db.query(
+    #                     model.MonthlyExpense.description, 
+    #                     model.MonthlyExpense.expense_category_id, 
+    #                     expense_category_model.ExpenseCategory.description)
+    #                 .join(expense_category_model.ExpenseCategory)
+    #                 .group_by(
+    #                     model.MonthlyExpense.description, 
+    #                     model.MonthlyExpense.expense_category_id, 
+    #                     expense_category_model.ExpenseCategory.description)
+    #                 .all())
     
-    # Set columns to dataframe
-    columns = ["description", "category_id", "category"]
+    # # Set columns to dataframe
+    # columns = ["description", "category_id", "category"]
 
-    # Create a dataframe
-    df_categorys = pd.DataFrame(db_categorys, columns=columns)
+    # # Create a dataframe
+    # df_categorys = pd.DataFrame(db_categorys, columns=columns)
 
     # Create a dictionary with the descriptions and categories
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(df_categorys['description'])
-    y = df_categorys['category_id']
+    # vectorizer = TfidfVectorizer()
+    # X = vectorizer.fit_transform(df_categorys['description'])
+    # y = df_categorys['category_id']
 
-    # Split the data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    # # Split the data
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    # Initialize and train the classifier
-    clf = SVC(kernel='linear')
-    clf.fit(X_train, y_train)
+    # # Initialize and train the classifier
+    # clf = SVC(kernel='linear')
+    # clf.fit(X_train, y_train)
 
-    # Predict by description
-    text_vec = vectorizer.transform([description])
-    prediction = clf.predict(text_vec)
+    # # Predict by description
+    # text_vec = vectorizer.transform([description])
+    # prediction = clf.predict(text_vec)
 
-    category_id = prediction[0]
+    # category_id = prediction[0]
 
-    return int(category_id)
+    # return int(category_id)
 
-                    
-    
-    
+    X = vectorizer.transform([description])
+    return int(clf.predict(X)[0])
+
+async def predict_category_by_description(db: Session, description: str):
+    """Predict the category of the expense by description"""
+    category_id = await _predict_category_by_description(db, description)
+    return {"category_id": category_id}

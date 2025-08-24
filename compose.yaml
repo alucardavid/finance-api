@@ -11,6 +11,8 @@ services:
       DB_CONNECTION_STRING: ${DB_CONNECTION_STRING}
     networks:
       finance:
+    volumes:
+      - ./app/model:/app/model
   finance-app:
     image: dpereira99/finance-app:latest
     container_name: finance-app

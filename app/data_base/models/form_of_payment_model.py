@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Numeric, BigInteger, S
 from sqlalchemy.orm import relationship, Mapped
 from typing import List
 from .balance_model import Balance
+from .variable_expense_model import VariableExpense
 
 from ..database import Base
 

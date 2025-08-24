@@ -11,6 +11,18 @@ services:
       DB_CONNECTION_STRING: ${DB_CONNECTION_STRING}
     networks:
       finance:
+    volumes:
+      - ./app/model:/app/model
+    depends_on:
+      - train-job
+  train-job:
+    container_name: train-job
+    build: .
+    command: "python /code/app/train_category_model.py"
+    environment:
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING}
+    volumes:
+      - ./app/model:/app/model
   finance-app:
     image: dpereira99/finance-app:latest
     container_name: finance-app

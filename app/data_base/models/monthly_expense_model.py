@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Numeric, BigInteger, Sequence, ForeignKey
 from sqlalchemy.orm import relationship
+from .form_of_payment_model import FormOfPayment
 
 from ..database import Base
 

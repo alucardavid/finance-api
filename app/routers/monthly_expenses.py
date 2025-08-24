@@ -134,3 +134,13 @@ async def add_bulk_monthly_expenses(expenses: List[monthly_expense_schema.Monthl
         if created_expense is not None:
             created_expenses.append(created_expense)
     return created_expenses
+
+@router.post("/category-predict")
+async def predict_expense_category(expense: monthly_expense_schema.MonthlyExpenseCreate, response: Response, db: Session = Depends(get_db)):
+    """Predict the category of a monthly expense"""
+    try:
+        prediction = await crud.predict_category_by_description(db, expense.description)
+        return prediction
+    except Exception as e:
+        response.status_code = status.HTTP_406_NOT_ACCEPTABLE
+        return { "error_message": e}

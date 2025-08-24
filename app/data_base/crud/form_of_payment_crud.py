@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.sql import text
 
 from typing import List
@@ -9,13 +9,20 @@ from ..models import balance_model
 
 def get_all_form_of_payments(db: Session, skip: int = 0, limit: int = 100, order_by: str = "id asc"):
     """Get all form of payments"""
-    form_of_payments = db.query(model.FormOfPayment).options(joinedload(model.FormOfPayment.balances)).order_by(text(order_by)).offset(skip).limit(limit).all()
+    form_of_payments = (
+        db.query(model.FormOfPayment)
+        .options(selectinload(model.FormOfPayment.balance))
+        .order_by(text(order_by))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     
     return form_of_payments
 
 def get_form_of_payment(db: Session, form_of_payment_id: int):
     """Get a form of payment by id"""
-    return db.query(model.FormOfPayment).options(joinedload(model.FormOfPayment.balances)).get(form_of_payment_id)
+    return db.query(model.FormOfPayment).options(joinedload(model.FormOfPayment.balance)).get(form_of_payment_id)
 
 def add_form_of_payment(db: Session, new_form_of_payment: schema.FormOfPaymentCreate):
     """Create a new form of payment"""

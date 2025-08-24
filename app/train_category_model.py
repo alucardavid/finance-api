@@ -53,7 +53,7 @@ clf.fit(X, y)
 os.makedirs('model', exist_ok=True)
 
 # Save the model and vectorizer
-joblib.dump(vectorizer, 'model/vectorizer.pkl')
-joblib.dump(clf, 'model/category_clf.pkl')
+joblib.dump(vectorizer, '/app/model/vectorizer.pkl')
+joblib.dump(clf, '/app/model/category_clf.pkl')
 
 print("Model and vectorizer saved successfully!")

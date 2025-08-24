@@ -15,8 +15,8 @@ from sklearn.metrics import accuracy_score, classification_report
 import pandas as pd
 import sys, json
 
-vectorizer = joblib.load('model/vectorizer.pkl')
-clf = joblib.load('model/category_clf.pkl')
+vectorizer = joblib.load('/app/model/vectorizer.pkl')
+clf = joblib.load('/app/model/category_clf.pkl')
 
 def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
     """Get all monthly expenses"""
@@ -165,7 +165,7 @@ def get_expense_by_id(db: Session, expense_id):
     return (db.query(model.MonthlyExpense)
                 .options(
                     joinedload(model.MonthlyExpense.form_of_payments)
-                    .joinedload(form_of_payment_model.FormOfPayment.balances))
+                    .joinedload(form_of_payment_model.FormOfPayment.balance))
                 .options(joinedload(model.MonthlyExpense.expense_categorys))
                 .where(model.MonthlyExpense.id == expense_id).one())
 

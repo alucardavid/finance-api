@@ -1,3 +1,4 @@
+import os
 import joblib
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import text, func, or_, and_
@@ -15,8 +16,14 @@ from sklearn.metrics import accuracy_score, classification_report
 import pandas as pd
 import sys, json
 
-vectorizer = joblib.load('/app/model/vectorizer.pkl')
-clf = joblib.load('/app/model/category_clf.pkl')
+env = os.getenv("ENVIRONMENT")
+
+if env == "development":
+    vectorizer = joblib.load('model/vectorizer.pkl')
+    clf = joblib.load('model/category_clf.pkl')
+else:
+    vectorizer = joblib.load('/app/model/vectorizer.pkl')
+    clf = joblib.load('/app/model/category_clf.pkl')
 
 def get_all_expenses(db: Session, page: int = 1, limit: int = 100, order_by: str = "id asc", due_date: str = None, where: str = None):
     """Get all monthly expenses"""

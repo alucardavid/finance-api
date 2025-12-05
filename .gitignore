@@ -9,3 +9,5 @@ htmlcov
 /finance-api
 .env
 *.pkl
+app/model/category_clf.pkl
+app/model/vectorizer.pkl

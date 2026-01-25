@@ -13,3 +13,5 @@ app/model/category_clf.pkl
 app/model/vectorizer.pkl
 app/model/category_clf.pkl
 app/model/vectorizer.pkl
+model/category_clf.pkl
+model/vectorizer.pkl

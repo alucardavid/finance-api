@@ -189,6 +189,12 @@ async def create_expense(db: Session, new_expense: monthly_expense_schema.Monthl
             plots_string = f"({current_plot}/{total_plots})"
             new_expense.description = description_tmp + plots_string
         
+        # Predict category if it's "Desconhecido" (24)
+        predicted_category_id = new_expense.expense_category_id
+        if new_expense.expense_category_id == 24:
+            prediction_result = await _predict_category_by_description(db, new_expense.description)
+            predicted_category_id = prediction_result["category_id"]  # Extract category_id from dict
+        
         db_expense = model.MonthlyExpense(
             place = new_expense.place,
             description = new_expense.description,
@@ -199,7 +205,7 @@ async def create_expense(db: Session, new_expense: monthly_expense_schema.Monthl
             due_date = (new_expense.due_date + timedelta(days=((i-1) * 30))).replace(day=new_expense.due_date.day) if i > 1 else new_expense.due_date,
             status = "Pendente",
             created_at = datetime.now(),
-            expense_category_id = new_expense.expense_category_id if new_expense.expense_category_id != 24 else await _predict_category_by_description(db, new_expense.description), # 24 is the id of the category "Desconhecido"
+            expense_category_id = predicted_category_id,
             form_of_payment_id = new_expense.form_of_payment_id,
             user_id = 1
         )
@@ -442,7 +448,7 @@ def expense_not_exist_check_amount(db: Session, new_expense: monthly_expense_sch
     return db_expense
     
 async def _predict_category_by_description(db: Session, description: str):
-    """Predict the category of the expense by description"""
+    """Predict the category of the expense by description with confidence threshold"""
     
     # # Get all descriptions
     # db_categorys = (db.query(
@@ -483,9 +489,22 @@ async def _predict_category_by_description(db: Session, description: str):
     # return int(category_id)
 
     X = vectorizer.transform([description])
-    return int(clf.predict(X)[0])
+    
+    # Get prediction probabilities
+    probabilities = clf.predict_proba(X)[0]
+    predicted_category = clf.predict(X)[0]
+    max_probability = probabilities.max()
+    
+    # Confidence threshold: only return prediction if confidence > 60%
+    CONFIDENCE_THRESHOLD = 0.60
+    
+    if max_probability < CONFIDENCE_THRESHOLD:
+        # Return "Desconhecido" (Unknown) category if confidence is too low
+        return {"category_id": 24, "confidence": float(max_probability), "predicted_below_threshold": True}
+    
+    return {"category_id": int(predicted_category), "confidence": float(max_probability), "predicted_below_threshold": False}
 
 async def predict_category_by_description(db: Session, description: str):
     """Predict the category of the expense by description"""
-    category_id = await _predict_category_by_description(db, description)
-    return {"category_id": category_id}
+    result = await _predict_category_by_description(db, description)
+    return result

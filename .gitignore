@@ -11,3 +11,5 @@ htmlcov
 *.pkl
 app/model/category_clf.pkl
 app/model/vectorizer.pkl
+app/model/category_clf.pkl
+app/model/vectorizer.pkl
